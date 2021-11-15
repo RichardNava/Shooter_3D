@@ -19,28 +19,55 @@ public class PlayerMove : MonoBehaviour
 
     bool isGrounded = false;
 
+
+    // Variables para el ataque
+    public bool isAttacking, stepAdvance;
+    public float impulsePunch = 200f;
+    public static int punchDamage = 2;
+    public BoxCollider punchCollider;
+
+
+
     private void FixedUpdate()
     {
         x = Input.GetAxis("Horizontal"); // -1 (Izquierda) / 0 (Centro) / 1 (Derecha)
         z = Input.GetAxis("Vertical"); // -1 (Adelante) / 0 (Centro) / 1 (Atras)
 
-        this.transform.Rotate(0, x * Time.deltaTime * rotationSpeed, 0);
-        this.transform.Translate(0, 0, z * Time.deltaTime * speed);
-        anim.SetFloat("ValueX", x);
-        anim.SetFloat("ValueZ", z);
+        if (!isAttacking)
+        {
+            this.transform.Rotate(0, x * Time.deltaTime * rotationSpeed, 0);
+            this.transform.Translate(0, 0, z * Time.deltaTime * speed);
+            anim.SetFloat("ValueX", x);
+            anim.SetFloat("ValueZ", z);
+        }
+        if (stepAdvance)
+        {
+            rb.velocity = transform.forward * impulsePunch * Time.deltaTime;
+        }
+
     }
 
     void Update()
     {
         Jumping();
         OtherAnims();
+        Punch();
+    }
+
+    public void Punch()
+    {
+        if (Input.GetKeyDown(KeyCode.LeftControl) && isGrounded && !isAttacking)
+        {
+            anim.SetTrigger("Punch");
+            isAttacking = true;
+        }
     }
     public void Jumping()
     {
         isGrounded = Physics.CheckSphere(groundCheck.position, 0.1f, groundMask);
         anim.SetBool("isGrounded", isGrounded);
 
-        if (isGrounded && Input.GetKey(KeyCode.Space))
+        if (isGrounded && Input.GetKey(KeyCode.Space) && !isAttacking)
         {
             anim.Play("JumpingUp");
             rb.AddForce(new Vector3(0, jumpForce, 0), ForceMode.Impulse);
@@ -64,5 +91,24 @@ public class PlayerMove : MonoBehaviour
             anim.SetBool("StopAnim", true);
         }
     }
-
+    public void NotAttack()
+    {
+        isAttacking = false;
+    }
+    public void AdvanceStep()
+    {
+        stepAdvance = true;
+    }
+    public void NotAdvanceStep()
+    {
+        stepAdvance = false;
+    }
+    public void EnablePunchCollider()
+    {
+        punchCollider.enabled = true;
+    }
+    public void DisablePunchCollider()
+    {
+        punchCollider.enabled = false;
+    }
 }
